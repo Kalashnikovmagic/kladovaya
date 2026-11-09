@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Кладовая</title>
+  <meta name="description" content="Продукты, запасы, список покупок и история закупок">
+  <meta name="theme-color" content="#2f6b4f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Кладовая">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1 id="title">Список покупок</h1>
+    <button class="icon-btn" id="menuBtn" aria-label="Настройки">⋯</button>
+  </header>
+
+  <main id="view"></main>
+
+  <nav class="tabs" aria-label="Разделы">
+    <button data-tab="list" class="active"><span>🛒</span>Список</button>
+    <button data-tab="stock"><span>🥫</span>Запасы</button>
+    <button data-tab="products"><span>📦</span>Продукты</button>
+    <button data-tab="purchases"><span>🧾</span>Закупки</button>
+  </nav>
+
+  <dialog id="dlg"><form method="dialog" id="dlgForm"></form></dialog>
+  <div id="toast" role="status"></div>
+  <input type="file" id="importFile" accept="application/json" hidden>
+
+  <script src="app.js"></script>
+</body>
+</html>
