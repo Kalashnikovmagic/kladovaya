@@ -243,3 +243,6 @@ dialog label .note { font-size: 12px; }
 .radio-chips input:checked + span { background: var(--warn-soft); color: var(--warn); box-shadow: 0 0 0 1px var(--warn); }
 .radio-chips input:focus-visible + span { outline: 2px solid var(--accent); }
 .day .name, #view .row .name { white-space: normal; }
+
+/* Без зума по двойному тапу (щипок для увеличения остаётся) */
+html, body, button, a, input, select, textarea, label, .row { touch-action: manipulation; }
