@@ -64,6 +64,7 @@ function seed() {
   const tvorog = P('Творог', 'Молочное', 'г', 500, 270);
   const yogurt = P('Греческий йогурт', 'Молочное', 'г', 250, 98);
   const tortilla = P('Тортильи', 'Хлеб и выпечка', 'шт', 6, 160, { fresh: false });
+  const ham = P('Ветчина из индейки Индилайт', 'Мясо и рыба', 'г', 120, 108);
   const mince = P('Фарш индейки', 'Мясо и рыба', 'г', 400, 320);
   const sauce = P('Соус для тортилий', 'Бакалея', 'г', 230, 123);
   const crisp = P('Хлебцы Dr. Korner', 'Хлеб и выпечка', 'шт', 10, 120, { fresh: false });
@@ -72,7 +73,7 @@ function seed() {
   const R = (name, slot, kcal, protein, ings, note = '', approx = true) => ({ id: uid(), name, slot, kcal, protein, approx, ings, note });
   const recipes = [
     R('Овсяноблин с курицей и сыром', 'Завтрак', 530, 45,
-      [I(oats, 55), I(milk, 80), I(eggs, 2), I(chicken, 60, { note: '≈45 г в готовом виде' }), I(curd, 7), I(cheese, 15), I(tomato, 50), I(cucumber, 40), I(teriyaki, 15)],
+      [I(oats, 55), I(milk, 80), I(eggs, 2), I(ham, 45), I(curd, 7), I(cheese, 15), I(tomato, 50), I(cucumber, 40), I(teriyaki, 15)],
       'Смешать овсянку, молоко и яйца, приготовить блин на сковороде. Добавить мясо, сыр, овощи и соус, сложить пополам.', false),
     R('Овсянка с протеином и фруктами', 'Завтрак', 630, 27,
       [I(oats, 90, { note: '85–100 г' }), I(protein, 15), I(banana, 125), I(nectarine, 130, { optional: true }), I(walnuts, 18)],
@@ -152,8 +153,29 @@ function applyPricePatches(d) {
   d.settings.pricesVersion = Math.max(from, ...PRICE_PATCHES.map((x) => x[0]));
 }
 
+// Изменения рецептов для уже сохранённых данных.
+function applyDataPatches(d) {
+  const from = d.settings.dataVersion || 0;
+  if (from < 1) {
+    // Овсяноблин: вместо запечённой курицы — ветчина из индейки Индилайт, 45 г.
+    const blin = d.recipes.find((r) => r.name === 'Овсяноблин с курицей и сыром');
+    const chicken = d.products.find((p) => p.name === 'Куриное филе');
+    const g = blin && chicken && blin.ings.find((x) => x.productId === chicken.id && x.qty === 60);
+    if (g) {
+      let ham = d.products.find((p) => p.name === 'Ветчина из индейки Индилайт');
+      if (!ham) {
+        ham = { id: uid(), name: 'Ветчина из индейки Индилайт', category: 'Мясо и рыба', unit: 'г', pack: 120, price: 108, stock: 0, minQty: 0, expiry: '', fresh: true };
+        d.products.push(ham);
+      }
+      Object.assign(g, { productId: ham.id, qty: 45, note: '' });
+    }
+  }
+  d.settings.dataVersion = 1;
+}
+
 let db = load();
 applyPricePatches(db);
+applyDataPatches(db);
 function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { toast('Не удалось сохранить'); } }
 save();
 
