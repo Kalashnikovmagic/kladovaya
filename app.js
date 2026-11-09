@@ -43,9 +43,10 @@ function seed() {
     products.push(p);
     return p;
   };
-  // Цены — ориентировочные; после первой закупки подставятся реальные.
-  const oats = P('Овсяные хлопья', 'Бакалея', 'г', 400, 90);
-  const milk = P('Молоко 2,5%', 'Молочное', 'мл', 930, 95);
+  // Цены: овсянка, молоко, крупы, творог, греческий йогурт и соус — из чеков Ленты от 08.11.2026,
+  // остальное — ориентировочно; после закупки в приложении подставятся реальные.
+  const oats = P('Овсяные хлопья', 'Бакалея', 'г', 700, 146);
+  const milk = P('Молоко 2,5%', 'Молочное', 'мл', 930, 110);
   const eggs = P('Яйца', 'Молочное', 'шт', 10, 130);
   const chicken = P('Куриное филе', 'Мясо и рыба', 'г', 1000, 480);
   const curd = P('Творожный сыр', 'Молочное', 'г', 140, 140);
@@ -57,14 +58,14 @@ function seed() {
   const banana = P('Бананы', 'Овощи и фрукты', 'г', 1000, 150);
   const nectarine = P('Нектарины', 'Овощи и фрукты', 'г', 1000, 320);
   const walnuts = P('Грецкие орехи', 'Бакалея', 'г', 200, 260);
-  const groats = P('Крупа (рис / гречка / булгур)', 'Бакалея', 'г', 800, 120);
+  const groats = P('Крупа (рис / гречка / булгур)', 'Бакалея', 'г', 400, 97);
   const veg = P('Овощи для гарнира', 'Заморозка', 'г', 400, 160);
   const oil = P('Оливковое масло', 'Бакалея', 'мл', 500, 750);
-  const tvorog = P('Творог', 'Молочное', 'г', 200, 120);
-  const yogurt = P('Греческий йогурт', 'Молочное', 'г', 250, 150);
+  const tvorog = P('Творог', 'Молочное', 'г', 500, 270);
+  const yogurt = P('Греческий йогурт', 'Молочное', 'г', 250, 98);
   const tortilla = P('Тортильи', 'Хлеб и выпечка', 'шт', 6, 160, { fresh: false });
   const mince = P('Фарш индейки', 'Мясо и рыба', 'г', 400, 320);
-  const sauce = P('Соус для тортилий', 'Бакалея', 'г', 250, 160);
+  const sauce = P('Соус для тортилий', 'Бакалея', 'г', 230, 123);
   const crisp = P('Хлебцы Dr. Korner', 'Хлеб и выпечка', 'шт', 10, 120, { fresh: false });
 
   const I = (p, qty, o = {}) => ({ productId: p.id, qty, ...o });
@@ -120,7 +121,7 @@ function normalize(d) {
     list: Array.isArray(d.list) ? d.list : [],
     purchases: Array.isArray(d.purchases) ? d.purchases : [],
     extra: Array.isArray(d.extra) ? d.extra : [],
-    settings: { budget: 0, planStart: today(), planDays: 7, startedAt: today(), ...(d.settings || {}) },
+    settings: { budget: 0, planStart: today(), planDays: 7, startedAt: today(), pricesVersion: d.products ? 0 : 1, ...(d.settings || {}) },
   };
 }
 function load() {
@@ -130,7 +131,26 @@ function load() {
   return normalize(base);
 }
 
+// Обновление цен из реальных чеков для уже сохранённых данных — только если цена не менялась вручную.
+const PRICE_PATCHES = [
+  ['Овсяные хлопья', 400, 90, 700, 146],
+  ['Молоко 2,5%', 930, 95, 930, 110],
+  ['Крупа (рис / гречка / булгур)', 800, 120, 400, 97],
+  ['Творог', 200, 120, 500, 270],
+  ['Греческий йогурт', 250, 150, 250, 98],
+  ['Соус для тортилий', 250, 160, 230, 123],
+];
+function applyPricePatches(d) {
+  if ((d.settings.pricesVersion || 0) >= 1) return;
+  PRICE_PATCHES.forEach(([name, pack0, price0, pack, price]) => {
+    const p = d.products.find((x) => x.name === name);
+    if (p && p.pack === pack0 && p.price === price0) Object.assign(p, { pack, price });
+  });
+  d.settings.pricesVersion = 1;
+}
+
 let db = load();
+applyPricePatches(db);
 function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { toast('Не удалось сохранить'); } }
 save();
 
