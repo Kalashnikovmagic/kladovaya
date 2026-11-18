@@ -31,9 +31,41 @@ function normalize(data) {
     categoryOrder:[...CATEGORIES]
   };
 }
+function mapLegacyCategory(p){
+  const guessed=guessCategory(String(p.name||''));
+  if(guessed!=='Прочее') return guessed;
+  return ({'Молочное':'Молочные продукты','Мясо и рыба':'Мясо и птица','Сладкое':'Сладости и снеки','Бытовое':'Бытовая химия','Другое':'Прочее','Спортпит':'Бакалея'})[p.category]||'Прочее';
+}
+function migrateLegacyDB(legacy){
+  const migrated=defaultDB();
+  const byLegacyId=new Map();
+  (Array.isArray(legacy.products)?legacy.products:[]).forEach(old=>{
+    if(!old||!old.name)return;
+    const tracked=Number(old.stock)>0||Number(old.minQty)>0;
+    const p={id:String(old.id||uid()),name:String(old.name),category:mapLegacyCategory(old),unit:String(old.unit||''),tracked,stockStatus:(Number(old.minQty)>0&&Number(old.stock)<Number(old.minQty))?'low':'available',favorite:false,purchaseCount:0,createdAt:dateNow(),updatedAt:dateNow()};
+    migrated.products.push(p);
+    if(old.id!=null)byLegacyId.set(String(old.id),p);
+  });
+  (Array.isArray(legacy.list)?legacy.list:[]).forEach(old=>{
+    const name=String(old?.name||'').trim(); if(!name)return;
+    let p=old.productId!=null?byLegacyId.get(String(old.productId)):null;
+    if(!p)p=migrated.products.find(x=>x.name.toLocaleLowerCase('ru')===name.toLocaleLowerCase('ru'));
+    if(!p){p={id:uid(),name,category:guessCategory(name),unit:'',tracked:false,stockStatus:'available',favorite:false,purchaseCount:0,createdAt:dateNow(),updatedAt:dateNow()};migrated.products.push(p);}
+    const legacyProduct=(legacy.products||[]).find(x=>String(x.id)===String(old.productId));
+    const amount=Number(old.qty);
+    const quantity=Number.isFinite(amount)&&amount>0?(Number(legacyProduct?.pack)>1?amount+' уп.':amount+(p.unit?' '+p.unit:'')):String(old.qty||'');
+    if(p.tracked)p.stockStatus='low';
+    migrated.items.push({id:uid(),productId:p.id,quantity,note:'',done:false,createdAt:dateNow(),doneAt:null});
+  });
+  return normalize(migrated);
+}
 function loadDB(){
-  try { const raw=localStorage.getItem(STORAGE_KEY); if(raw) return normalize(JSON.parse(raw)); }
-  catch(e){ console.error('Не удалось прочитать локальные данные',e); }
+  try {
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw)return normalize(JSON.parse(raw));
+    const legacyRaw=localStorage.getItem('kladovaya:v2');
+    if(legacyRaw){const migrated=migrateLegacyDB(JSON.parse(legacyRaw));localStorage.setItem(STORAGE_KEY,JSON.stringify(migrated));return migrated;}
+  } catch(e){console.error('Не удалось прочитать локальные данные',e);}
   return defaultDB();
 }
 let db=loadDB();
