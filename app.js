@@ -173,12 +173,14 @@ function showDialog(html, onSubmit){
     dlg.close();onSubmit?.(action,form);
   });
   dlg.showModal();
+  const firstInput=form.querySelector('input:not([type="checkbox"]), select, textarea');
+  if(firstInput) firstInput.focus();
 }
 function productFields(p=null, initialName=''){
   const selectedCategory=p?.category||guessCategory(initialName);
   return `<div class="dialog-head"><div><span class="eyebrow">${p?'КАТАЛОГ':'НОВЫЙ ТОВАР'}</span><h2>${p?'Изменить товар':'Добавить товар'}</h2></div><button class="close-dialog" value="cancel" formnovalidate aria-label="Закрыть">×</button></div>
   <label>Название<input name="name" required maxlength="80" value="${esc(p?.name||initialName)}" placeholder="Например, молоко" autocomplete="off"></label>
-    <label>Категория<select name="category">${CATEGORIES.map(c=>`<option ${c===options.category?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
+    <label>Категория<select name="category">${CATEGORIES.map(c=>`<option ${c===selectedCategory?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
   <label>Единица измерения по умолчанию <span class="optional">необязательно</span><input name="unit" maxlength="20" value="${esc(p?.unit||'')}" placeholder="кг, л, упаковка, шт."></label>
   <label class="switch-line"><span><b>Отслеживать в запасах</b><small>Товар появится в разделе «Запасы»</small></span><input type="checkbox" name="tracked" ${p?.tracked?'checked':''}></label>
   <label class="switch-line"><span><b>В избранное</b><small>Быстрое добавление в покупки</small></span><input type="checkbox" name="favorite" ${p?.favorite?'checked':''}></label>
@@ -273,7 +275,15 @@ function renderStock(){
     <form id="stockSearch" class="search-bar"><span>⌕</span><input name="q" placeholder="Найти в запасах" value="${esc(query)}"></form>
     ${tracked.filter(p=>p.name.toLocaleLowerCase('ru').includes(query.toLocaleLowerCase('ru'))).length?tracked.filter(p=>p.name.toLocaleLowerCase('ru').includes(query.toLocaleLowerCase('ru'))).map(p=>`<article class="stock-row"><div class="stock-symbol">${p.stockStatus==='low'?'!':'✓'}</div><button class="item-main" data-edit-product="${p.id}"><span class="item-name">${esc(p.name)}</span><span class="item-detail">${esc(p.category)}</span></button><button class="status-pill ${p.stockStatus==='low'?'low':'ok'}" data-toggle-stock="${p.id}">${p.stockStatus==='low'?'Заканчивается':'Есть'}</button></article>`).join(''):`<div class="empty-state"><div class="empty-icon">▣</div><h2>${tracked.length?'Ничего не найдено':'Пока нет отслеживаемых товаров'}</h2><p>${tracked.length?'Попробуй изменить поисковый запрос.':'Добавляй товары в каталог и включай для них отслеживание запасов.'}</p><button class="button primary" data-go-catalog>Открыть каталог</button></div>`}`;
   $('#stockSearch').addEventListener('submit',e=>e.preventDefault());
-  $('#stockSearch [name="q"]').addEventListener('input',e=>{query=e.target.value;renderStock();const el=$('#stockSearch [name="q"]');el.focus();el.setSelectionRange(query.length,query.length);});
+  $('#stockSearch [name="q"]').addEventListener('input',e=>{
+    query=e.target.value.toLocaleLowerCase('ru');
+    const rows=[...$('#app').querySelectorAll('.stock-row')];
+    let shown=0;
+    rows.forEach(row=>{const match=row.querySelector('.item-name').textContent.toLocaleLowerCase('ru').includes(query);row.hidden=!match;if(match)shown++;});
+    let empty=$('#stockNoResults');
+    if(!empty){empty=document.createElement('p');empty.id='stockNoResults';empty.className='muted';empty.textContent='Ничего не найдено';$('#stockResults')?.append(empty);}
+    empty.hidden=shown>0||rows.length===0;
+  });
 }
 function renderCatalog(){
   const q=query.toLocaleLowerCase('ru');
@@ -286,7 +296,26 @@ function renderCatalog(){
     ${filtered.length?categoryGroups(filtered.map(p=>({productId:p.id}))).map(([cat,items])=>`<section class="list-section"><div class="category-heading static"><span>${esc(cat)}</span><span class="category-meta">${items.length}</span></div><div class="item-list">${items.map(({productId})=>{const p=product(productId);return `<article class="catalog-row"><button class="item-main" data-edit-product="${p.id}"><span class="item-name">${p.favorite?'★ ':''}${esc(p.name)}</span><span class="item-detail">${p.tracked?'Отслеживается в запасах':'Не отслеживается'}</span></button><button class="small-add" data-add-product="${p.id}">＋</button></article>`;}).join('')}</div></section>`).join(''):`<div class="empty-state"><h2>Товаров пока нет</h2><p>Создай первый товар — он сохранится в каталоге.</p><button class="button primary" id="emptyNew">Добавить товар</button></div>`}`;
   $('#newProduct')?.addEventListener('click',()=>openNewProduct());
   $('#emptyNew')?.addEventListener('click',()=>openNewProduct());
-  $('#catalogSearch')?.addEventListener('input',e=>{query=e.target.value;const pos=e.target.selectionStart;renderCatalog();const el=$('#catalogSearch');el.focus();el.setSelectionRange(pos,pos);});
+  $('#catalogSearch')?.addEventListener('input',e=>{
+    query=e.target.value.toLocaleLowerCase('ru');
+    let shown=0;
+    $('#catalogResults')?.querySelectorAll('.list-section').forEach(section=>{
+      const rows=[...section.querySelectorAll('.catalog-row')];
+      let sectionShown=0;
+      rows.forEach(row=>{
+        const text=row.querySelector('.item-main')?.textContent.toLocaleLowerCase('ru')||'';
+        const match=text.includes(query);
+        row.hidden=!match;
+        if(match)sectionShown++;
+      });
+      section.hidden=sectionShown===0;
+      shown+=sectionShown;
+    });
+    if($('#catalogShortcuts'))$('#catalogShortcuts').hidden=!!query;
+    let empty=$('#catalogNoResults');
+    if(!empty){empty=document.createElement('div');empty.id='catalogNoResults';empty.className='empty-state';empty.textContent='Ничего не найдено';$('#catalogResults')?.append(empty);}
+    empty.hidden=!query||shown>0;
+  });
 }
 function renderSettings(){
   $('#app').innerHTML=`<section class="welcome"><div><p class="eyebrow">ПЕРСОНАЛЬНЫЕ НАСТРОЙКИ</p><h1>Настройки</h1><p class="muted">Данные хранятся на этом устройстве.</p></div></section>
