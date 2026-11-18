@@ -62,9 +62,29 @@ function migrateLegacyDB(legacy){
 function loadDB(){
   try {
     const raw=localStorage.getItem(STORAGE_KEY);
-    if(raw)return normalize(JSON.parse(raw));
+    let current=raw?normalize(JSON.parse(raw)):defaultDB();
     const legacyRaw=localStorage.getItem('kladovaya:v2');
-    if(legacyRaw){const migrated=migrateLegacyDB(JSON.parse(legacyRaw));localStorage.setItem(STORAGE_KEY,JSON.stringify(migrated));return migrated;}
+    const migrationDone=localStorage.getItem('kladovaya:v3:migration-done')==='1';
+    if(legacyRaw&&!migrationDone){
+      const imported=migrateLegacyDB(JSON.parse(legacyRaw));
+      const ids=new Map();
+      imported.products.forEach(oldProduct=>{
+        const existing=current.products.find(p=>p.name.trim().toLocaleLowerCase('ru')===oldProduct.name.trim().toLocaleLowerCase('ru'));
+        if(existing)ids.set(oldProduct.id,existing.id);
+        else {current.products.push(oldProduct);ids.set(oldProduct.id,oldProduct.id);}
+      });
+      imported.items.forEach(oldItem=>{
+        const productId=ids.get(oldItem.productId)||oldItem.productId;
+        if(!current.items.some(i=>i.productId===productId&&!i.done)){
+          current.items.push({...oldItem,productId});
+        }
+      });
+      current=normalize(current);
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(current));
+      localStorage.setItem('kladovaya:v3:migration-done','1');
+      return current;
+    }
+    return current;
   } catch(e){console.error('Не удалось прочитать локальные данные',e);}
   return defaultDB();
 }
