@@ -188,19 +188,19 @@ function openAddItem(name=''){
     <label>Количество <span class="optional">необязательно</span><input name="quantity" maxlength="50" placeholder="Например, 2 л или большая упаковка"></label>
     <label>Комментарий <span class="optional">необязательно</span><input name="note" maxlength="120" placeholder="Марка, вкус, уточнение"></label>
     <label class="switch-line"><span><b>Отслеживать в запасах</b><small>После покупки товар вернётся в статус «Есть»</small></span><input type="checkbox" name="tracked" ${options.tracked?'checked':''}></label>
-    <div class="category-hint">Категория: <b id="suggestedCategory">${esc(options.category)}</b></div>
+    <label>Категория<select name="category">\${CATEGORIES.map(c=>\`<option \${c===options.category?'selected':''}>\${esc(c)}</option>\`).join('')}</select></label>
     <div class="dialog-actions"><button class="button secondary" value="cancel" formnovalidate>Отмена</button><button class="button primary" value="save">Добавить</button></div>`,
     (action,form)=>{
       const name=form.elements.name.value.trim();let p=findProduct(name);
-      if(!p)p=addProduct(name,{track:form.elements.tracked.checked});
-      else if(form.elements.tracked.checked)p.tracked=true;
+      if(!p)p=addProduct(name,{category:form.elements.category.value,track:form.elements.tracked.checked});
+      else {p.category=form.elements.category.value;p.tracked=form.elements.tracked.checked;p.updatedAt=dateNow();}
       addToList(p,form.elements.quantity.value,form.elements.note.value);save();render();
     });
   const input=$('#dialogForm [name="name"]');
   input?.addEventListener('input',()=>{
     const p=findProduct(input.value);const cat=p?.category||guessCategory(input.value);
-    $('#suggestedCategory').textContent=cat;
-    const track=$('#dialogForm [name="tracked"]');if(p&&track)track.checked=p.tracked;
+    const category=$('#dialogForm [name="category"]');if(category)category.value=p?.category||cat;
+    const track=$('#dialogForm [name="tracked"]');if(track)track.checked=p?p.tracked:false;
   });
 }
 function editListItem(item){
