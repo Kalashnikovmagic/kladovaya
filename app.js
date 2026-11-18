@@ -284,19 +284,62 @@ $('#app').addEventListener('click',e=>{
 $('#backupFile').addEventListener('change',e=>{const file=e.target.files[0];if(file)importBackup(file);e.target.value='';});
 render();
 
-/* Обновление PWA: новая версия ждёт явного нажатия пользователя. */
-if('serviceWorker' in navigator){
-  let waitingWorker=null;
-  const notice=$('#updateNotice');
-  function showUpdate(worker){waitingWorker=worker;notice.hidden=false;}
-  navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());
-  navigator.serviceWorker.register('./sw.js').then(reg=>{
-    if(reg.waiting && navigator.serviceWorker.controller)showUpdate(reg.waiting);
-    reg.addEventListener('updatefound',()=>{
-      const worker=reg.installing;if(!worker)return;
-      worker.addEventListener('statechange',()=>{if(worker.state==='installed'&&navigator.serviceWorker.controller)showUpdate(worker);});
+/* Обновление PWA: как в Kalashnikov — заметная плашка и явная кнопка. */
+if ('serviceWorker' in navigator) {
+  let waitingWorker = null;
+  let reloading = false;
+  const notice = $('#updateNotice');
+  const updateButton = $('#updateButton');
+
+  function showUpdate(worker) {
+    if (!worker) return;
+    waitingWorker = worker;
+    notice.querySelector('span').textContent = 'Вышло обновление';
+    notice.hidden = false;
+  }
+
+  function inspectRegistration(registration) {
+    if (registration.waiting && navigator.serviceWorker.controller) {
+      showUpdate(registration.waiting);
+    }
+  }
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloading) return;
+    reloading = true;
+    // Пользовательские данные хранятся в localStorage; перезагружаем только интерфейс.
+    window.location.reload();
+  });
+
+  navigator.serviceWorker.register('./sw.js').then(registration => {
+    inspectRegistration(registration);
+
+    const checkForUpdate = () => {
+      if (document.visibilityState === 'visible') registration.update().catch(() => {});
+    };
+
+    registration.addEventListener('updatefound', () => {
+      const installing = registration.installing;
+      if (!installing) return;
+      installing.addEventListener('statechange', () => {
+        if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdate(registration.waiting || installing);
+        }
+      });
     });
-    setInterval(()=>reg.update().catch(()=>{}),60*60*1000);
-  }).catch(console.warn);
-  $('#updateButton').addEventListener('click',()=>{if(waitingWorker)waitingWorker.postMessage({type:'SKIP_WAITING'});});
+
+    // Проверяем при запуске, возвращении в приложение и регулярно во время использования.
+    window.addEventListener('focus', checkForUpdate);
+    window.addEventListener('pageshow', checkForUpdate);
+    document.addEventListener('visibilitychange', checkForUpdate);
+    checkForUpdate();
+    window.setInterval(checkForUpdate, 2 * 60 * 1000);
+  }).catch(error => console.warn('Не удалось зарегистрировать Service Worker:', error));
+
+  updateButton.addEventListener('click', () => {
+    if (!waitingWorker) return;
+    updateButton.disabled = true;
+    updateButton.textContent = 'Обновляем…';
+    waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+  });
 }
