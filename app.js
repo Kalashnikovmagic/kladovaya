@@ -281,7 +281,7 @@ function renderStock(){
     let shown=0;
     rows.forEach(row=>{const match=row.querySelector('.item-name').textContent.toLocaleLowerCase('ru').includes(query);row.hidden=!match;if(match)shown++;});
     let empty=$('#stockNoResults');
-    if(!empty){empty=document.createElement('p');empty.id='stockNoResults';empty.className='muted';empty.textContent='Ничего не найдено';$('#stockResults')?.append(empty);}
+    if(!empty){empty=document.createElement('p');empty.id='stockNoResults';empty.className='muted';empty.textContent='Ничего не найдено';$('#app').append(empty);}
     empty.hidden=shown>0||rows.length===0;
   });
 }
@@ -299,11 +299,12 @@ function renderCatalog(){
   $('#catalogSearch')?.addEventListener('input',e=>{
     query=e.target.value.toLocaleLowerCase('ru');
     let shown=0;
-    $('#catalogResults')?.querySelectorAll('.list-section').forEach(section=>{
+    $('#app').querySelectorAll('.list-section').forEach(section=>{
       const rows=[...section.querySelectorAll('.catalog-row')];
       let sectionShown=0;
+      const category=section.querySelector('.category-heading')?.textContent.toLocaleLowerCase('ru')||'';
       rows.forEach(row=>{
-        const text=row.querySelector('.item-main')?.textContent.toLocaleLowerCase('ru')||'';
+        const text=(row.querySelector('.item-main')?.textContent||'').toLocaleLowerCase('ru')+' '+category;
         const match=text.includes(query);
         row.hidden=!match;
         if(match)sectionShown++;
@@ -311,9 +312,9 @@ function renderCatalog(){
       section.hidden=sectionShown===0;
       shown+=sectionShown;
     });
-    if($('#catalogShortcuts'))$('#catalogShortcuts').hidden=!!query;
+    const shortcuts=$('#app .catalog-shortcuts');if(shortcuts)shortcuts.hidden=!!query;
     let empty=$('#catalogNoResults');
-    if(!empty){empty=document.createElement('div');empty.id='catalogNoResults';empty.className='empty-state';empty.textContent='Ничего не найдено';$('#catalogResults')?.append(empty);}
+    if(!empty){empty=document.createElement('div');empty.id='catalogNoResults';empty.className='empty-state';empty.textContent='Ничего не найдено';$('#app').append(empty);}
     empty.hidden=!query||shown>0;
   });
 }
