@@ -1,17 +1,17 @@
 {
-  "name": "Кладовая — продукты и закупки",
+  "name": "Кладовая — покупки и запасы",
   "short_name": "Кладовая",
-  "description": "Продукты, запасы, список покупок и история закупок",
+  "description": "Личный список покупок и ручной контроль домашних запасов",
   "lang": "ru",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f6f4ef",
-  "theme_color": "#2f6b4f",
+  "background_color": "#f5f5f2",
+  "theme_color": "#f5f5f2",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"},
+    {"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml"}
   ]
 }
