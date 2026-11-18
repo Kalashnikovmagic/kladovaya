@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f5f2">
+  <meta name="description" content="Личный список покупок и контроль домашних запасов">
   <title>Кладовая</title>
-  <meta name="description" content="Продукты, запасы, список покупок и история закупок">
-  <meta name="theme-color" content="#2f6b4f">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -15,25 +15,21 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="top">
-    <h1 id="title">Меню</h1>
-    <button class="icon-btn" id="menuBtn" aria-label="Настройки">⋯</button>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Кладовая"><span class="brand-mark">К</span><span id="pageTitle">Покупки</span></a>
+    <button class="icon-button" id="settingsShortcut" aria-label="Настройки">•••</button>
   </header>
-
-  <main id="view"></main>
-
-  <nav class="tabs" aria-label="Разделы">
-    <button data-tab="menu" class="active"><span>🗓️</span>Меню</button>
-    <button data-tab="list"><span>🛒</span>Список</button>
-    <button data-tab="products"><span>🥫</span>Продукты</button>
-    <button data-tab="recipes"><span>🍳</span>Блюда</button>
-    <button data-tab="money"><span>💰</span>Траты</button>
+  <main id="app" class="page" aria-live="polite"></main>
+  <nav class="bottom-nav" aria-label="Основная навигация">
+    <button class="nav-item active" data-tab="shopping"><span class="nav-icon">☷</span><span>Покупки</span></button>
+    <button class="nav-item" data-tab="stock"><span class="nav-icon">▣</span><span>Запасы</span></button>
+    <button class="nav-item" data-tab="catalog"><span class="nav-icon">⌕</span><span>Каталог</span></button>
+    <button class="nav-item" data-tab="settings"><span class="nav-icon">⚙</span><span>Настройки</span></button>
   </nav>
-
-  <dialog id="dlg"><form method="dialog" id="dlgForm"></form></dialog>
-  <div id="toast" role="status"></div>
-  <input type="file" id="importFile" accept="application/json" hidden>
-
+  <dialog id="dialog"><form id="dialogForm" method="dialog"></form></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="updateNotice" class="update-notice" hidden><span>Доступно обновление</span><button id="updateButton">Обновить</button></div>
+  <input id="backupFile" type="file" accept="application/json" hidden>
   <script src="app.js"></script>
 </body>
 </html>
