@@ -178,7 +178,7 @@ function productFields(p=null, initialName=''){
   const selectedCategory=p?.category||guessCategory(initialName);
   return `<div class="dialog-head"><div><span class="eyebrow">${p?'КАТАЛОГ':'НОВЫЙ ТОВАР'}</span><h2>${p?'Изменить товар':'Добавить товар'}</h2></div><button class="close-dialog" value="cancel" formnovalidate aria-label="Закрыть">×</button></div>
   <label>Название<input name="name" required maxlength="80" value="${esc(p?.name||initialName)}" placeholder="Например, молоко" autocomplete="off"></label>
-  <label>Категория<select name="category">${CATEGORIES.map(c=>`<option ${c===selectedCategory?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
+    <label>Категория<select name="category">${CATEGORIES.map(c=>`<option ${c===options.category?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
   <label>Единица измерения по умолчанию <span class="optional">необязательно</span><input name="unit" maxlength="20" value="${esc(p?.unit||'')}" placeholder="кг, л, упаковка, шт."></label>
   <label class="switch-line"><span><b>Отслеживать в запасах</b><small>Товар появится в разделе «Запасы»</small></span><input type="checkbox" name="tracked" ${p?.tracked?'checked':''}></label>
   <label class="switch-line"><span><b>В избранное</b><small>Быстрое добавление в покупки</small></span><input type="checkbox" name="favorite" ${p?.favorite?'checked':''}></label>
