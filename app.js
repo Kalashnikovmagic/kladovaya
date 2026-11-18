@@ -96,13 +96,13 @@ function markDone(item, done){
   const p=product(item.productId);
   item.done=done; item.doneAt=done?dateNow():null;
   if(p?.tracked) p.stockStatus=done?'available':'low';
-  if(done && p) p.purchaseCount++;
+  if(p) p.purchaseCount=Math.max(0,p.purchaseCount+(done?1:-1));
   save(); render();
 }
 function markLow(id){
   const p=product(id); if(!p||!p.tracked)return;
   p.stockStatus=p.stockStatus==='low'?'available':'low';
-  if(p.stockStatus==='low') addToList(p);
+  if(p.stockStatus==='low') { addToList(p); save(); }
   else {
     const pending=activeItems().find(i=>i.productId===p.id);
     if(pending) db.items=db.items.filter(i=>i.id!==pending.id);
@@ -269,7 +269,7 @@ document.addEventListener('click',e=>{
   const edit=e.target.closest('[data-edit-item]');if(edit){const i=db.items.find(x=>x.id===edit.dataset.editItem);if(i)editListItem(i);return;}
   const low=e.target.closest('[data-toggle-stock]');if(low){markLow(low.dataset.toggleStock);return;}
   const editP=e.target.closest('[data-edit-product]');if(editP){const p=product(editP.dataset.editProduct);if(p)openEditProduct(p);return;}
-  const add=e.target.closest('[data-add-product]');if(add){const p=product(add.dataset.addProduct);if(p){addToList(p);if(activeTab!=='shopping'){activeTab='shopping';render();}else render();}return;}
+  const add=e.target.closest('[data-add-product]');if(add){const p=product(add.dataset.addProduct);if(p){if(p.tracked){addToList(p);activeTab='shopping';render();}else openAddItem(p.name);}return;}
   const create=e.target.closest('[data-create-name]');if(create){openAddItem(create.dataset.createName);$('#quickSuggestions').hidden=true;return;}
   const collapse=e.target.closest('[data-collapse]');if(collapse){const c=collapse.dataset.collapse;collapsedCategories.has(c)?collapsedCategories.delete(c):collapsedCategories.add(c);render();return;}
   if(e.target.closest('[data-go-catalog]')){activeTab='catalog';render();return;}
@@ -282,8 +282,6 @@ $('#app').addEventListener('click',e=>{
   if(e.target.id==='resetData'&&confirm('Удалить каталог, запасы и список покупок на этом устройстве? Сначала сохрани резервную копию, если данные могут понадобиться.')){db=defaultDB();save();render();toast('Данные очищены');}
 });
 $('#backupFile').addEventListener('change',e=>{const file=e.target.files[0];if(file)importBackup(file);e.target.value='';});
-$('#quickInput')?.addEventListener('input',showQuickSuggestions);
-document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{activeTab=b.dataset.tab;query='';render();}));
 render();
 
 /* Обновление PWA: новая версия ждёт явного нажатия пользователя. */
