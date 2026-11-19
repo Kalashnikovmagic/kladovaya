@@ -1,4 +1,4 @@
-const CACHE = 'kladovaya-v3-shell-7';
+const CACHE = 'kladovaya-v3-shell-8';
 const CACHE_PREFIX = 'kladovaya-';
 const ASSETS = ['./', './index.html', './style.css', './app.js', './manifest.webmanifest',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
