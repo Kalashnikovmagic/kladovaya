@@ -21,3 +21,6 @@ dialog{width:min(440px,calc(100vw - 28px));max-height:calc(100dvh - 36px);overfl
 .update-notice{position:fixed;z-index:20;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(420px,calc(100vw - 24px));padding:10px 12px;border-radius:14px;background:var(--text);color:var(--bg);box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:650}.update-notice[hidden]{display:none}.update-notice button{border:0;border-radius:9px;background:var(--accent);color:var(--accent-ink);padding:8px 11px;font-size:12px;font-weight:800}
 @media(min-width:700px){.page{padding-top:26px}.welcome h1{font-size:38px}.bottom-nav{left:50%;right:auto;transform:translateX(-50%);width:min(100%,680px);border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* Поисковая фильтрация: display:flex у строк не должен отменять hidden. */
+[hidden]{display:none!important}
