@@ -323,7 +323,7 @@ function renderSettings(){
     <section class="settings-card"><h2>Внешний вид</h2><p>Тема приложения</p><div class="theme-options">${[['system','Как на телефоне'],['light','Светлая'],['dark','Тёмная']].map(([v,t])=>`<button class="${db.settings.theme===v?'selected':''}" data-theme="${v}">${t}</button>`).join('')}</div></section>
     <section class="settings-card"><h2>Резервная копия</h2><p>Сохрани файл, чтобы перенести каталог, запасы и список на другой телефон или восстановить их позже.</p><button class="settings-action" id="exportBackup">↓ Скачать резервную копию</button><button class="settings-action" id="importBackup">↑ Восстановить из файла</button></section>
     <section class="settings-card"><h2>Данные приложения</h2><p>Кладовая не отправляет данные на сервер. Удаление данных браузера может стереть локальную базу — регулярно сохраняй резервную копию.</p><button class="settings-action danger-text" id="resetData">Сбросить данные приложения</button></section>
-    <p class="version-note">Кладовая · версия 3.0.4</p>`;
+    <p class="version-note">Кладовая · версия 3.0.5</p>`;
 }
 function render(){
   const titles={shopping:'Покупки',stock:'Запасы',catalog:'Каталог',settings:'Настройки'};
@@ -345,6 +345,16 @@ function importBackup(file){
     }catch(e){toast('Не удалось прочитать эту копию');}
   };reader.readAsText(file);
 }
+/* На iPhone явно передаём фокус полю поиска в момент касания. */
+function focusSearchField(event){
+  const bar=event.target.closest?.('.search-bar');
+  if(!bar)return;
+  const field=bar.querySelector('input');
+  if(field && document.activeElement!==field) field.focus();
+}
+document.addEventListener('touchstart',focusSearchField,{capture:true,passive:true});
+document.addEventListener('pointerdown',focusSearchField,{capture:true});
+
 document.addEventListener('click',e=>{
   const nav=e.target.closest('[data-tab]');if(nav){activeTab=nav.dataset.tab;query='';render();return;}
   const toggle=e.target.closest('[data-toggle-item]');if(toggle){const i=db.items.find(x=>x.id===toggle.dataset.toggleItem);if(i)markDone(i,!i.done);return;}
