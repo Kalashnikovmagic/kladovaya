@@ -1,6 +1,6 @@
 'use strict';
 
-/* Кладовая 3 — покупки, ручной контроль запасов и каталог. */
+/* Кладовая 3.0.6 — покупки, ручной контроль запасов и каталог. */
 const STORAGE_KEY = 'kladovaya:v3';
 const CATEGORIES = [
   'Молочные продукты','Мясо и птица','Рыба и морепродукты','Овощи и фрукты',
@@ -345,16 +345,6 @@ function importBackup(file){
     }catch(e){toast('Не удалось прочитать эту копию');}
   };reader.readAsText(file);
 }
-/* На iPhone явно передаём фокус полю поиска в момент касания. */
-function focusSearchField(event){
-  const bar=event.target.closest?.('.search-bar');
-  if(!bar)return;
-  const field=bar.querySelector('input');
-  if(field && document.activeElement!==field) field.focus();
-}
-document.addEventListener('touchstart',focusSearchField,{capture:true,passive:true});
-document.addEventListener('pointerdown',focusSearchField,{capture:true});
-
 document.addEventListener('click',e=>{
   const nav=e.target.closest('[data-tab]');if(nav){activeTab=nav.dataset.tab;query='';render();return;}
   const toggle=e.target.closest('[data-toggle-item]');if(toggle){const i=db.items.find(x=>x.id===toggle.dataset.toggleItem);if(i)markDone(i,!i.done);return;}
